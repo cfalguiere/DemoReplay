@@ -10,7 +10,7 @@ class BookFinderController {
 
     def list = {
         params.max = Math.min(params.max ? params.int('max') : 10, 100)
-        [bookFinderInstanceList: BookFinder.list(params), bookFinderInstanceTotal: BookFinder.count()]
+        [bookFinderInstanceList: BookFinder.list(params), booksFoundTotal: 0]
     }
 
     def create = {
@@ -18,6 +18,16 @@ class BookFinderController {
         bookFinderInstance.properties = params
         return [bookFinderInstance: bookFinderInstance]
     }
+
+    def search = {
+        def bookFinderInstance = new BookFinder(params)
+        def booksFound = Book.find("from Book as b where b.author=:author",
+                [author: bookFinderInstance.searchPhrase],
+                [cache: true])
+
+        render(view: "list", model: [booksFound: booksFound, booksFoundTotal: booksFound.count()])
+    }
+
 
     def save = {
         def bookFinderInstance = new BookFinder(params)
